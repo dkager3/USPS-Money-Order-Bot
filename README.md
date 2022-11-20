@@ -2,7 +2,9 @@
 Periodically checks the status of a USPS money order.
 
 ## Dependencies
-* selenium
-* chromedriver
-* python3-tk
-* pysimplegui
+The following need to be installed to work. Follow the links for instructions on installing each dependency.
+* [Python 3](https://www.python.org/downloads/)
+* [selenium](https://selenium-python.readthedocs.io/installation.html)
+* [chromedriver](https://chromedriver.chromium.org/getting-started)
+* [Tk](https://tkdocs.com/tutorial/install.html)
+* [pysimplegui](https://pypi.org/project/PySimpleGUI/)
