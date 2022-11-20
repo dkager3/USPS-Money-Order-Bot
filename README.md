@@ -7,4 +7,4 @@ The following need to be installed to work. Follow the links for instructions on
 * [selenium](https://selenium-python.readthedocs.io/installation.html)
 * [chromedriver](https://chromedriver.chromium.org/getting-started)
 * [Tk](https://tkdocs.com/tutorial/install.html)
-* [pysimplegui](https://pypi.org/project/PySimpleGUI/)
+* [PySimpleGUI](https://pypi.org/project/PySimpleGUI/)
