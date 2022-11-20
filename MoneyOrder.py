@@ -12,6 +12,7 @@ SUBT_FORM  = -5 # Failed to submit form
 READ_STAT  = -6 # Failed to read status
 PROC_EROR  = -7 # Unable to process request
 ORDR_INVL  = -8 # Money Order details are invalid
+UNKN_EROR  = -9 # Unknown error has occured
 ORDR_NCASH = 0  # Order not yet cashed
 ORDR_CASH  = 1  # Order cashed 
 
@@ -121,8 +122,10 @@ class MoneyOrder:
       return ORDR_NCASH
     elif 'is invalid' in status_msg:
       return ORDR_INVL
-    else:
+    elif 'cashed' in status_msg:
       return ORDR_CASH
+    else:
+      return UNKN_EROR 
       
   def statusStr(self, code):
     """
@@ -153,6 +156,8 @@ class MoneyOrder:
       return "Unable to process request."
     elif code == ORDR_INVL:
       return "Money Order details are invalid."
+    elif code == UNKN_EROR:
+      return "An unknown error has occured. Please try again later."
     elif code == ORDR_NCASH:
       return "Order not yet cashed."
     elif code == ORDR_CASH:
