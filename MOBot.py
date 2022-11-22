@@ -2,13 +2,18 @@
 import config
 import MoneyOrder as mo
 import StatusCheckThread as sct
+import TimerThread as tt
 import PySimpleGUI as sg
+from threading import Lock
 from datetime import datetime
 from datetime import timedelta
 
 # Globals
 INI_FILE = 'BotSettings.ini'
-THREAD_ID = 'StatusThread'
+STATUS_THREAD_ID = 'StatusThread'
+TIMER_THREAD_ID = 'TimerThread'
+status_lock = Lock()
+next_check = None
 
 def setWindowDefaults(config, window):
   '''
@@ -75,10 +80,6 @@ def startButtonPressed(config, window):
   '''
   Event handler for when the start button is pressed.
   
-  When the start button is pressed, the money order details are
-  sent to a thread to perform the status check, as to not hang
-  the window.
-  
       Parameters:
           config (Config.ConfigSettings): Config settings
           window (PySimpleGUI.Window): GUI window
@@ -87,24 +88,11 @@ def startButtonPressed(config, window):
           None
   '''
   
-  # Update window to reflect status being checked
-  window['Start'].update(disabled=True)
-  order = mo.MoneyOrder(values['-SN_IN-'], values['-PO_IN-'], values['-AMT_IN-'])
-  window['-MO_STAT-'].update('Checking status ...')
+  global status_lock
   
-  # Launch thread to check Money Order status
-  check_thread = sct.StatusCheckThread(THREAD_ID, window, order)
-  check_thread.setDaemon(True)
-  check_thread.start()
-  
-  # Update date/time of last and next check
-  timestamp = datetime.now()
-  window['-LAST_CHECK-'].update(timestamp.strftime("%m/%d/%Y %I:%M:%S %p"))
-  try:
-    timestamp += timedelta(seconds=int(config.run['check_frequency_sec']))
-  except:
-    timestamp += timedelta(hours=12)
-  window['-NEXT_CHECK-'].update(timestamp.strftime("%m/%d/%Y %I:%M:%S %p"))
+  if not status_lock.locked():
+    status_lock.acquire()
+    performStatusCheck(config, window)
 
 def stopButtonPressed(window):
   '''
@@ -120,9 +108,51 @@ def stopButtonPressed(window):
           None
   '''
   
+  global next_check
+  
+  next_check = None
   window['Stop'].update(disabled=True)
   window['Start'].update(disabled=False)
   window['-NEXT_CHECK-'].update('TBD')
+
+def performStatusCheck(config, window):
+  '''
+  Initiates Money Order status check.
+  
+  To initiate the status check, the money order details are
+  sent to a thread to perform the status check, as to not hang
+  the window.
+  
+      Parameters:
+          config (Config.ConfigSettings): Config settings
+          window (PySimpleGUI.Window): GUI window
+      
+      Returns:
+          None
+  '''
+  
+  global next_check
+  
+  # Update window to reflect status being checked
+  window['Start'].update(disabled=True)
+  order = mo.MoneyOrder(values['-SN_IN-'], values['-PO_IN-'], values['-AMT_IN-'])
+  window['-MO_STAT-'].update('Checking status ...')
+  
+  # Launch thread to check Money Order status
+  check_thread = sct.StatusCheckThread(STATUS_THREAD_ID, window, order)
+  check_thread.setDaemon(True)
+  check_thread.start()
+  
+  # Update date/time of last and next check
+  timestamp = datetime.now()
+  window['-LAST_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
+  try:
+    timestamp += timedelta(seconds=int(config.run['check_frequency_sec']))
+  except:
+    timestamp += timedelta(hours=12)
+    
+  next_check = timestamp
+  window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
 
 if __name__ == '__main__':
   HEADER_FONT = ("Arial", 14)
@@ -170,10 +200,17 @@ if __name__ == '__main__':
   
   window = sg.Window('USPS Money Order Status Bot', layout, finalize=True)
   setWindowDefaults(config, window)
+  
+  try:
+    timer_thread = tt.TimerThread(TIMER_THREAD_ID, window, int(config.run['check_frequency_sec']))
+  except:
+    timer_thread = tt.TimerThread(TIMER_THREAD_ID, window, 43200)
+  timer_thread.setDaemon(True)
+  timer_thread.start()
 
   while True:
     event, values = window.read()
-    #print(event, values)
+    print(event, values)
     
     if event == sg.WIN_CLOSED:
       break
@@ -181,8 +218,23 @@ if __name__ == '__main__':
       startButtonPressed(config, window)
     elif event == 'Stop':
       stopButtonPressed(window)
-    elif event == THREAD_ID:
-      window['Stop'].update(disabled=False)
-      window['-MO_STAT-'].update(values[THREAD_ID])
+    elif event == STATUS_THREAD_ID:
+      # Avoid re-enabling 'Stop' button if it's been disabled
+      # before thread completes.
+      if next_check is not None:
+        window['Stop'].update(disabled=False)
+      # Update status message
+      window['-MO_STAT-'].update(values[STATUS_THREAD_ID])
+      
+      # Release lock
+      if status_lock.locked():
+        status_lock.release()
+    elif event == TIMER_THREAD_ID:
+      # Periodic status check
+      if next_check is not None:
+        print(next_check)
+        if datetime.now() >= next_check and not status_lock.locked():
+          status_lock.acquire()
+          performStatusCheck(config, window)
     
   window.close()
