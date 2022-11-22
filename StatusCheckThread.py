@@ -1,16 +1,16 @@
 #!/usr/bin/python
-import threading
-from time import sleep
+import BotThread
+import time
 import MoneyOrder as mo
 
-class StatusCheckThread(threading.Thread):
+class StatusCheckThread(BotThread.BotThread):
   """
   Thread to initiate Money Order status check.
   
+  Inherits from BotThread.
+  
   Attributes
   ----------
-  THREAD_ID : str
-    ID for thread to invoke GUI event
   window : PySimpleGUI.Window
     Window object to invoke event for
   order : MO.MoneyOrder
@@ -19,7 +19,7 @@ class StatusCheckThread(threading.Thread):
   Methods
   -------
   run()
-    Performs Money Order status check
+    Performs Money Order status check.
   """
   
   def __init__(self, THREAD_ID, window, order):
@@ -36,8 +36,7 @@ class StatusCheckThread(threading.Thread):
         Money Order details
     """
     
-    super(StatusCheckThread, self).__init__()
-    self.THREAD_ID = THREAD_ID
+    super().__init__(THREAD_ID)
     self.window = window
     self.order = order
     
@@ -63,5 +62,5 @@ class StatusCheckThread(threading.Thread):
     # Simulation to prevent USPS from thinking I'm spamming them
     # during development
     # TODO: Remove when done
-    sleep(2)
+    time.sleep(2)
     self.window.write_event_value(self.THREAD_ID, self.order.statusStr(mo.ORDR_NCASH))
