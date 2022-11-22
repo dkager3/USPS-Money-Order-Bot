@@ -1,8 +1,8 @@
 #!/usr/bin/python
 import config
 import MoneyOrder as mo
-import StatusCheckThread as sct
-import TimerThread as tt
+from BotThreads import StatusCheckThread as sct
+from BotThreads import TimerThread as tt
 import PySimpleGUI as sg
 from threading import Lock
 from datetime import datetime
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
   while True:
     event, values = window.read()
-    print(event, values)
+    #print(event, values)
     
     if event == sg.WIN_CLOSED:
       break

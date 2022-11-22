@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import BotThread
+from BotThreads import BotThread
 import time
 
 class TimerThread(BotThread.BotThread):
