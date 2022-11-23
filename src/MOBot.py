@@ -1,15 +1,15 @@
 #!/usr/bin/python
-import config
 import MoneyOrder as mo
 from BotThreads import StatusCheckThread as sct
 from BotThreads import TimerThread as tt
+from Config import config
 import PySimpleGUI as sg
 from threading import Lock
 from datetime import datetime
 from datetime import timedelta
 
 # Globals
-INI_FILE = 'BotSettings.ini'
+INI_FILE = './Config/BotSettings.ini'
 STATUS_THREAD_ID = 'StatusThread'
 TIMER_THREAD_ID = 'TimerThread'
 status_lock = Lock()
