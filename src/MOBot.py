@@ -1,12 +1,13 @@
 #!/usr/bin/python
-import MoneyOrder as mo
 from BotThreads import StatusCheckThread as sct
 from BotThreads import TimerThread as tt
 from Config import config
-import PySimpleGUI as sg
-from threading import Lock
 from datetime import datetime
 from datetime import timedelta
+from Logger import logger as lg
+import MoneyOrder as mo
+import PySimpleGUI as sg
+from threading import Lock
 
 # Globals
 INI_FILE = './Config/BotSettings.ini'
@@ -14,6 +15,83 @@ STATUS_THREAD_ID = 'StatusThread'
 TIMER_THREAD_ID = 'TimerThread'
 status_lock = Lock()
 next_check = None
+
+def init_logger(logger, conf):
+  '''
+  Inits logger with values from the INI.
+  
+      Parameters:
+          logger (logger.Logger): Logging functionality
+          config (configparser.SectionProxy): Config logging settings
+      
+      Returns:
+          None
+  '''
+  
+  try:
+    logger.setConsoleLogging(bool(int(conf['log_to_console'])))
+  except:
+    pass
+    
+  try:
+    logger.setFileLogging(bool(int(conf['log_to_file'])))
+  except:
+    pass
+    
+  try:
+    logger.setVerbose(bool(int(conf['log_verbose'])))
+  except:
+    pass
+    
+  try:
+    logger.setMaxLogLen(int(conf['max_log_len']))
+  except:
+    pass
+  
+  try:
+    logger.setLogFile(conf['log_folder_path'], conf['log_file_name'])
+  except:
+    pass
+    
+    
+def performStatusCheck(config, window):
+  '''
+  Initiates Money Order status check.
+  
+  To initiate the status check, the money order details are
+  sent to a thread to perform the status check, as to not hang
+  the window.
+  
+      Parameters:
+          config (Config.ConfigSettings): Config settings
+          window (PySimpleGUI.Window): GUI window
+      
+      Returns:
+          None
+  '''
+  
+  global next_check
+  
+  # Update window to reflect status being checked
+  window['Start'].update(disabled=True)
+  order = mo.MoneyOrder(values['-SN_IN-'], values['-PO_IN-'], values['-AMT_IN-'])
+  window['-MO_STAT-'].update('Checking status ...')
+  
+  # Launch thread to check Money Order status
+  check_thread = sct.StatusCheckThread(STATUS_THREAD_ID, window, order)
+  check_thread.setDaemon(True)
+  check_thread.start()
+  
+  # Update date/time of last and next check
+  timestamp = datetime.now()
+  window['-LAST_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
+  try:
+    timestamp += timedelta(seconds=int(config.run['check_frequency_sec']))
+  except:
+    timestamp += timedelta(hours=12)
+    
+  next_check = timestamp
+  window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
 
 def setWindowDefaults(config, window):
   '''
@@ -115,45 +193,6 @@ def stopButtonPressed(window):
   window['Start'].update(disabled=False)
   window['-NEXT_CHECK-'].update('TBD')
 
-def performStatusCheck(config, window):
-  '''
-  Initiates Money Order status check.
-  
-  To initiate the status check, the money order details are
-  sent to a thread to perform the status check, as to not hang
-  the window.
-  
-      Parameters:
-          config (Config.ConfigSettings): Config settings
-          window (PySimpleGUI.Window): GUI window
-      
-      Returns:
-          None
-  '''
-  
-  global next_check
-  
-  # Update window to reflect status being checked
-  window['Start'].update(disabled=True)
-  order = mo.MoneyOrder(values['-SN_IN-'], values['-PO_IN-'], values['-AMT_IN-'])
-  window['-MO_STAT-'].update('Checking status ...')
-  
-  # Launch thread to check Money Order status
-  check_thread = sct.StatusCheckThread(STATUS_THREAD_ID, window, order)
-  check_thread.setDaemon(True)
-  check_thread.start()
-  
-  # Update date/time of last and next check
-  timestamp = datetime.now()
-  window['-LAST_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
-  try:
-    timestamp += timedelta(seconds=int(config.run['check_frequency_sec']))
-  except:
-    timestamp += timedelta(hours=12)
-    
-  next_check = timestamp
-  window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
-
 if __name__ == '__main__':
   HEADER_FONT = ("Arial", 14)
   ELEM_FONT = ("Arial", 12)
@@ -161,7 +200,12 @@ if __name__ == '__main__':
   # Read ini file for bot settings
   config = config.ConfigSettings(INI_FILE)
   if not config.readConfigFile():
-    print("WARN: {} not found or is corrupt".format(INI_FILE))
+    print("WARNING: {} not found or is corrupt. Using default values.".format(INI_FILE))
+  
+  # Set up logging
+  logger = lg.Logger()
+  init_logger(logger, config.logging)
+  logger.removeLogs()
 
   # Column layout for Money Order details
   order_col = [
@@ -210,7 +254,7 @@ if __name__ == '__main__':
 
   while True:
     event, values = window.read()
-    #print(event, values)
+    logger.log("Event: {}".format(str(event)), event_type=lg.VERBOSE)
     
     if event == sg.WIN_CLOSED:
       break
@@ -232,7 +276,6 @@ if __name__ == '__main__':
     elif event == TIMER_THREAD_ID:
       # Periodic status check
       if next_check is not None:
-        print(next_check)
         if datetime.now() >= next_check and not status_lock.locked():
           status_lock.acquire()
           performStatusCheck(config, window)
