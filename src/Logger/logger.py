@@ -29,7 +29,7 @@ class Logger:
   
   Methods
   -------
-  setConsoleLogging
+  setConsoleLogging(val)
     Sets whether or not to output logs to console
   setFileLogging(code)
     Sets whether or not to output logs to file
@@ -203,7 +203,7 @@ class Logger:
     contentList.append("{} ET".format(str(event_time)))
     contentList.append(logmsg)
     
-    content = "{: <7} {: <25} {: <50}".format(*contentList)
+    content = "{: <9} {: <25} {: <50}".format(*contentList)
     
     if self.console_logging:
       print(content)
