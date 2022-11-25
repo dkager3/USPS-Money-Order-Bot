@@ -115,7 +115,7 @@ def sendAlert(order_status
           Status of sending alert (bool)
   '''
   
-  ret = True
+  ret = None
   email = be.BotEmail(email_login, email_password)
   subject = "USPS MONEY ORDER STATUS: "
   body = "Hello,"\
@@ -294,7 +294,10 @@ if __name__ == '__main__':
 
   while True:
     event, values = window.read()
-    logger.log("Event: {}".format(str(event)), event_type=lg.VERBOSE)
+    try:
+      logger.log("Event: {} = {}".format(str(event), values[str(event)]), event_type=lg.VERBOSE)
+    except:
+      logger.log("Event: {}".format(str(event)), event_type=lg.VERBOSE)
     
     if event == sg.WIN_CLOSED:
       break
@@ -317,15 +320,17 @@ if __name__ == '__main__':
       
       # Send alerts, if needed
       if not EMAIL_DISABLED:
-        if not sendAlert(values[STATUS_THREAD_ID][0]
-                        ,values['-NOTIFY_CASH-']
-                        ,values['-NOTIFY_NCASH-']
-                        ,values['-EMAIL_RECP-']
-                        ,config.email['bot_email_login']
-                        ,config.email['bot_email_paswd']):
-          logger.log("Failed to send email to {}".format(values['-EMAIL_RECP-']), event_type=lg.ERROR)
-        else:
-          logger.log("Status email sent to {}".format(values['-EMAIL_RECP-']))
+        send_alert_status = sendAlert(values[STATUS_THREAD_ID][0]
+                                     ,values['-NOTIFY_CASH-']
+                                     ,values['-NOTIFY_NCASH-']
+                                     ,values['-EMAIL_RECP-']
+                                     ,config.email['bot_email_login']
+                                     ,config.email['bot_email_paswd'])
+        if send_alert_status is not None:
+          if send_alert_status:
+            logger.log("Status email sent to {}".format(values['-EMAIL_RECP-']))
+          else:
+            logger.log("Failed to send email to {}".format(values['-EMAIL_RECP-']), event_type=lg.ERROR)
       
     elif event == TIMER_THREAD_ID:
       # Periodic status check
