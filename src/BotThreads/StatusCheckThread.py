@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from BotThreads import BotThread
-import time
 import MoneyOrder as mo
 
 class StatusCheckThread(BotThread.BotThread):

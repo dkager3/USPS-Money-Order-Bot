@@ -72,7 +72,6 @@ def performStatusCheck(config, window):
           None
   '''
   
-  global EMAIL_DISABLED
   global next_check
   
   # Update window to reflect status being checked
@@ -93,9 +92,8 @@ def performStatusCheck(config, window):
   except:
     timestamp += timedelta(hours=12)
   
-  if not EMAIL_DISABLED:
-    next_check = timestamp
-    window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
+  next_check = timestamp
+  window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
   
 def sendAlert(order_status
              ,send_cashed
@@ -306,12 +304,9 @@ if __name__ == '__main__':
       stopButtonPressed(window)
     elif event == STATUS_THREAD_ID:
       # Avoid re-enabling 'Stop' button if it's been disabled
-      # before thread completes. Don't re-enable if periodic
-      # checking is not happening.
-      if not EMAIL_DISABLED and next_check is not None:
+      # before thread completes.
+      if next_check is not None:
         window['Stop'].update(disabled=False)
-      elif EMAIL_DISABLED:
-        window['Start'].update(disabled=False)
 
       # Update status message
       window['-MO_STAT-'].update(values[STATUS_THREAD_ID][1])
