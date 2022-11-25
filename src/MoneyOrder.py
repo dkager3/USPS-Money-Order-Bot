@@ -157,7 +157,7 @@ class MoneyOrder:
     elif code == ORDR_INVL:
       return "Money Order details are invalid."
     elif code == UNKN_EROR:
-      return "An unknown error has occured. Please try again later."
+      return "An unknown error has occured. Please check the MO details and try again later."
     elif code == ORDR_NCASH:
       return "Order not yet cashed."
     elif code == ORDR_CASH:

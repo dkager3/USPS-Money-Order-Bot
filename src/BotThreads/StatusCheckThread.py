@@ -45,7 +45,7 @@ class StatusCheckThread(BotThread.BotThread):
     Performs Money Order status check.
     
     After getting Money Order status, this method invokes an event
-    with the status in the GUI window.
+    with the status to update the GUI window.
     
     Paramters
     ---------
@@ -56,11 +56,5 @@ class StatusCheckThread(BotThread.BotThread):
       None
     """
     
-    # TODO: Uncomment below line to actually retrieve status
-    #self.window.write_event_value(self.THREAD_ID, self.order.statusStr(self.order.checkStatus()))
-    
-    # Simulation to prevent USPS from thinking I'm spamming them
-    # during development
-    # TODO: Remove when done
-    time.sleep(2)
-    self.window.write_event_value(self.THREAD_ID, self.order.statusStr(mo.ORDR_NCASH))
+    status = self.order.checkStatus()
+    self.window.write_event_value(self.THREAD_ID, [status, self.order.statusStr(status)])

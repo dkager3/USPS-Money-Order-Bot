@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from BotEmail import BotEmail as be
 from BotThreads import StatusCheckThread as sct
 from BotThreads import TimerThread as tt
 from Config import config
@@ -13,6 +14,7 @@ from threading import Lock
 INI_FILE = './Config/BotSettings.ini'
 STATUS_THREAD_ID = 'StatusThread'
 TIMER_THREAD_ID = 'TimerThread'
+EMAIL_DISABLED = False
 status_lock = Lock()
 next_check = None
 
@@ -70,6 +72,7 @@ def performStatusCheck(config, window):
           None
   '''
   
+  global EMAIL_DISABLED
   global next_check
   
   # Update window to reflect status being checked
@@ -89,9 +92,45 @@ def performStatusCheck(config, window):
     timestamp += timedelta(seconds=int(config.run['check_frequency_sec']))
   except:
     timestamp += timedelta(hours=12)
-    
-  next_check = timestamp
-  window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
+  
+  if not EMAIL_DISABLED:
+    next_check = timestamp
+    window['-NEXT_CHECK-'].update(timestamp.strftime('%m/%d/%Y %I:%M:%S %p'))
+  
+def sendAlert(order_status
+             ,send_cashed
+             ,send_not_cashed
+             ,recipient
+             ,email_login
+             ,email_password):
+  '''
+  Sends email alert to user if conditions are met
+  
+      Parameters:
+          order_status (int): Status code of the Money Order
+          send_cashed (bool): Send alert on cashed Money Order
+          send_not_cashed (bool): Send alert on non-cashed Money Order
+          email_login (str): Login for bot email
+          email_password (str): Password for bot email
+      
+      Returns:
+          Status of sending alert (bool)
+  '''
+  
+  ret = True
+  email = be.BotEmail(email_login, email_password)
+  subject = "USPS MONEY ORDER STATUS: "
+  body = "Hello,"\
+         "\n\nPlease see your USPS Money Order status in the subject.\n\nThanks and best regards,\n\nUSPS Money Order Bot"
+  
+  if order_status == mo.ORDR_CASH and send_cashed:
+    subject = subject + "Cashed!"
+    ret = email.send(cashed_subject, body, recipient)
+  elif order_status == mo.ORDR_NCASH and send_not_cashed:
+    subject = subject + "NOT Yet Cashed!"
+    ret = email.send(subject, body, recipient)
+  
+  return ret
 
 def setWindowDefaults(config, window):
   '''
@@ -104,6 +143,8 @@ def setWindowDefaults(config, window):
       Returns:
           None
   '''
+  
+  global EMAIL_DISABLED
   
   # Populate Money Order serial num if it's in the ini
   try:
@@ -127,6 +168,7 @@ def setWindowDefaults(config, window):
   # email login info is missing.
   if config.email is None or \
      not('bot_email_login' in config.email and 'bot_email_paswd' in config.email):
+    EMAIL_DISABLED = True
     window['-EMAIL-OPT-'].update('Email Options (INI Error: Not Available)')
     window['-EMAIL_RECP-'].update(disabled=True)
     window['-NOTIFY_CASH-'].update(disabled=True)
@@ -264,19 +306,37 @@ if __name__ == '__main__':
       stopButtonPressed(window)
     elif event == STATUS_THREAD_ID:
       # Avoid re-enabling 'Stop' button if it's been disabled
-      # before thread completes.
-      if next_check is not None:
+      # before thread completes. Don't re-enable if periodic
+      # checking is not happening.
+      if not EMAIL_DISABLED and next_check is not None:
         window['Stop'].update(disabled=False)
+      elif EMAIL_DISABLED:
+        window['Start'].update(disabled=False)
+
       # Update status message
-      window['-MO_STAT-'].update(values[STATUS_THREAD_ID])
+      window['-MO_STAT-'].update(values[STATUS_THREAD_ID][1])
       
       # Release lock
       if status_lock.locked():
         status_lock.release()
+      
+      # Send alerts, if needed
+      if not EMAIL_DISABLED:
+        if not sendAlert(values[STATUS_THREAD_ID][0]
+                        ,values['-NOTIFY_CASH-']
+                        ,values['-NOTIFY_NCASH-']
+                        ,values['-EMAIL_RECP-']
+                        ,config.email['bot_email_login']
+                        ,config.email['bot_email_paswd']):
+          logger.log("Failed to send email to {}".format(values['-EMAIL_RECP-']), event_type=lg.ERROR)
+        else:
+          logger.log("Status email sent to {}".format(values['-EMAIL_RECP-']))
+      
     elif event == TIMER_THREAD_ID:
       # Periodic status check
       if next_check is not None:
-        if datetime.now() >= next_check and not status_lock.locked():
+        if not status_lock.locked():
+          logger.log("Performing status check", event_type=lg.VERBOSE)
           status_lock.acquire()
           performStatusCheck(config, window)
     
