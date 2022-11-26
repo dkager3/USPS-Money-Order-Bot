@@ -40,7 +40,7 @@ class BotEmail:
     
   def send(self, subject, body, recipient):
     """
-    Scrapes USPS website to see money order status.
+    Sends email to recipient with given subject and body. 
     
     Paramters
     ---------
