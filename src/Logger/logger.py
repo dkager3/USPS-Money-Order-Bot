@@ -167,7 +167,7 @@ class Logger:
 
   def log(self, logmsg, event_type=INFO):
     """
-    Set max log message length.
+    Log message with respect to log settings.
     
     Paramters
     ---------

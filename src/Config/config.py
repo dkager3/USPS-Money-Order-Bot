@@ -7,25 +7,25 @@ READ_SUCC = 1 # Config file read successfully
 
 class ConfigSettings:
   """
-  Class to store config settings from ini file.
+  Class to store config settings from INI file.
   
   Attributes
   ----------
   ini_file : str
-    Path to bot settings ini file
+    Path to bot settings INI file
   order_details : configparser.SectionProxy
-    Order details section in ini file
+    Order details section in INI file
   run : configparser.SectionProxy
-    Run settings section in ini file
+    Run settings section in INI file
   logging : configparser.SectionProxy
-    Logging settings section in ini file
+    Logging settings section in INI file
   email : configparser.SectionProxy
-    Email settings section in ini file
+    Email settings section in INI file
   
   Methods
   -------
   readConfigFile()
-    Reads bot settings ini file and stores sections
+    Reads bot settings INI file and stores sections
   """
   
   def __init__(self, ini_file):
@@ -35,7 +35,7 @@ class ConfigSettings:
     Parameters
     ----------
       ini_file : str
-        Path to bot settings ini file
+        Path to bot settings INI file
     """
     
     self.ini_file      = ini_file
@@ -46,7 +46,7 @@ class ConfigSettings:
     
   def readConfigFile(self):
     """
-    Validate ini exists and read it.
+    Validate INI exists and read it.
     
     Paramters
     ---------
@@ -57,7 +57,7 @@ class ConfigSettings:
       Read status : int
     """
 
-    # Read ini
+    # Read INI
     config = configparser.ConfigParser()
     try:
       if not config.read(self.ini_file):
@@ -65,25 +65,25 @@ class ConfigSettings:
     except:
       return READ_FAIL
     
-    # Extract MO details from ini
+    # Extract MO details from INI
     try:
       self.order_details = config['order_details']
     except:
       pass
         
-    # Extract run settings from ini
+    # Extract run settings from INI
     try:
       self.run = config['bot_settings.run']
     except:
       pass
     
-    # Extract log settings from ini    
+    # Extract log settings from INI    
     try:
       self.logging = config['bot_settings.logging']
     except:
       pass
      
-    # Extract email settings from ini     
+    # Extract email settings from INI     
     try:
       self.email = config['bot_settings.email']
     except:
