@@ -54,7 +54,7 @@ class Logger:
       None
     """
     
-    self.console_logging = False
+    self.console_logging = True
     self.file_logging = False
     self.verbose = False
     self.max_log_len = 70
