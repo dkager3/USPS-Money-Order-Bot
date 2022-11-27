@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from BotThreads import BotThread
-import MoneyOrder as mo
+from MoneyOrder import MoneyOrder as mo
 
 class StatusCheckThread(BotThread.BotThread):
   """
@@ -12,7 +12,7 @@ class StatusCheckThread(BotThread.BotThread):
   ----------
   window : PySimpleGUI.Window
     Window object to invoke event for
-  order : MO.MoneyOrder
+  order : MoneyOrder.MoneyOrder
     Money Order details
   
   Methods
@@ -31,7 +31,7 @@ class StatusCheckThread(BotThread.BotThread):
         ID for thread to invoke GUI event
       window : PySimpleGUI.Window
         Window object to invoke event for
-      order : MO.MoneyOrder
+      order : MoneyOrder.MoneyOrder
         Money Order details
     """
     

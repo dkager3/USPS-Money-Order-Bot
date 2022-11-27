@@ -57,7 +57,7 @@ class Logger:
     self.console_logging = True
     self.file_logging = False
     self.verbose = False
-    self.max_log_len = 70
+    self.max_log_len = 80
     self.logs_folder = None
     self.log_file = None
   
@@ -124,7 +124,7 @@ class Logger:
       None
     """
     
-    self.max_log_len = 70
+    self.max_log_len = val
   
   def setLogFile(self, folder_path, file_name):
     """
