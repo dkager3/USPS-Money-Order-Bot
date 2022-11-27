@@ -6,7 +6,7 @@ from Config import config
 from datetime import datetime
 from datetime import timedelta
 from Logger import logger as lg
-import MoneyOrder as mo
+from MoneyOrder import MoneyOrder as mo
 import PySimpleGUI as sg
 from threading import Lock
 
@@ -108,6 +108,7 @@ def sendAlert(order_status
           order_status (int): Status code of the Money Order
           send_cashed (bool): Send alert on cashed Money Order
           send_not_cashed (bool): Send alert on non-cashed Money Order
+          recipient (str): Email to send status to
           email_login (str): Login for bot email
           email_password (str): Password for bot email
       
@@ -116,10 +117,13 @@ def sendAlert(order_status
   '''
   
   ret = None
+  now = datetime.now()
   email = be.BotEmail(email_login, email_password)
-  subject = "USPS MONEY ORDER STATUS: "
+  subject = "[USPS MO STATUS] "
   body = "Hello,"\
-         "\n\nPlease see your USPS Money Order status in the subject.\n\nThanks and best regards,\n\nUSPS Money Order Bot"
+         "\n\nPlease see your USPS Money Order status in the subject. "\
+         "The status is current as of {}."\
+         "\n\nThanks and best regards,\n\nUSPS Money Order Bot".format(now.strftime('%m/%d/%Y %I:%M:%S %p'))
   
   if order_status == mo.ORDR_CASH and send_cashed:
     subject = subject + "Cashed!"
@@ -292,6 +296,7 @@ if __name__ == '__main__':
   timer_thread.setDaemon(True)
   timer_thread.start()
 
+  # Event loop
   while True:
     event, values = window.read()
     try:
