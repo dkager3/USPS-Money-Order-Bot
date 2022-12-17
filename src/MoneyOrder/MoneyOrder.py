@@ -122,7 +122,7 @@ class MoneyOrder:
       return ORDR_NCASH
     elif 'is invalid' in status_msg:
       return ORDR_INVL
-    elif 'cashed' in status_msg:
+    elif 'has been cashed' in status_msg:
       return ORDR_CASH
     else:
       return UNKN_EROR 
