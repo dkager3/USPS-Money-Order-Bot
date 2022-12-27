@@ -189,7 +189,7 @@ class Logger:
       return
     
     if len(logmsg) > self.max_log_len:
-      logmsg = logmsg[0:config.msg_len]
+      logmsg = logmsg[0:self.max_log_len]
       
     if event_type == VERBOSE:
       contentList.append("[VERBOSE]")
