@@ -127,7 +127,7 @@ def sendAlert(order_status
   
   if order_status == mo.ORDR_CASH and send_cashed:
     subject = subject + "Cashed!"
-    ret = email.send(cashed_subject, body, recipient)
+    ret = email.send(subject, body, recipient)
   elif order_status == mo.ORDR_NCASH and send_not_cashed:
     subject = subject + "NOT Yet Cashed!"
     ret = email.send(subject, body, recipient)

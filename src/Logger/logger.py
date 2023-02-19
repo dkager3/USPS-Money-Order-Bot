@@ -31,17 +31,17 @@ class Logger:
   -------
   setConsoleLogging(val)
     Sets whether or not to output logs to console
-  setFileLogging(code)
+  setFileLogging(val)
     Sets whether or not to output logs to file
-  setVerbose(code)
+  setVerbose(val)
     Sets verbose logging setting
-  setMaxLogLen(code)
+  setMaxLogLen(val)
     Sets maximum length of each log entry
-  setLogFile(code)
+  setLogFile(folder_path, file_name)
     Sets the path of the log file
-  removeLogs(code)
+  removeLogs()
     Removes logs from log file directory
-  log(code)
+  log(logmsg, event_type)
     Logs given message according to the set logging settings
   """
   

@@ -81,7 +81,7 @@ def sendAlert(order_status
   
   if order_status == mo.ORDR_CASH and send_cashed:
     subject = subject + "Cashed!"
-    ret = email.send(cashed_subject, body, recipient)
+    ret = email.send(subject, body, recipient)
   elif order_status == mo.ORDR_NCASH and send_not_cashed:
     subject = subject + "NOT Yet Cashed!"
     ret = email.send(subject, body, recipient)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
   # Read ini file for bot settings
   config = config.ConfigSettings(INI_FILE)
   if not config.readConfigFile():
-    sys.exit("ERROR: {} not found or is corrupt. Using default values.".format(INI_FILE))
+    sys.exit("ERROR: {} not found or is corrupt.".format(INI_FILE))
   
   # Set up logging
   logger = lg.Logger()
