@@ -81,7 +81,7 @@ def performStatusCheck(config, window):
   
   # Launch thread to check Money Order status
   check_thread = sct.StatusCheckThread(STATUS_THREAD_ID, window, order)
-  check_thread.setDaemon(True)
+  check_thread.daemon = True
   check_thread.start()
   
   # Update date/time of last and next check
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     timer_thread = tt.TimerThread(TIMER_THREAD_ID, window, int(config.run['check_frequency_sec']))
   except:
     timer_thread = tt.TimerThread(TIMER_THREAD_ID, window, 43200)
-  timer_thread.setDaemon(True)
+  timer_thread.daemon = True
   timer_thread.start()
 
   # Event loop
